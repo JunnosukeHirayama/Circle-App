@@ -7,17 +7,14 @@
 ## スクリーンショット
 
 ### トップページ
-明るく親しみやすいトーンのランディング。応募までの流れを3ステップで紹介。
 
-![トップページ](docs/screenshots/landing.png)
+  <img src="docs/screenshots/landing.png" width="50%">
 
 ### サークル検索
-対象者（学生／社会人）・カテゴリ・キーワードで絞り込み。カードには対象者バッジとメイン画像を表示。
 
 ![サークル検索](docs/screenshots/browse.png)
 
 ### サークル詳細
-活動内容・ルール・運営者を掲載。画像はギャラリー表示で、ログイン後その場で応募できます。
 
 ![サークル詳細](docs/screenshots/detail.png)
 
