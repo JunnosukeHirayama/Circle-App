@@ -1,26 +1,70 @@
 @import "tailwindcss";
 
+/* =========================================================================
+   Circle App — bright & friendly design system
+   ========================================================================= */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fffdf8;
+  --foreground: #3a2f25;
+  --card: #ffffff;
+  --muted: #8b7e6f;
+  --border: #f0e9dd;
+  --primary: #f59e0b; /* amber-500 */
+  --primary-foreground: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+
+  --radius-4xl: 2rem;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Warm decorative background blobs for the landing / auth pages */
+.bg-warm {
+  background-color: #fffdf8;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(251, 191, 36, 0.18) 0px, transparent 50%),
+    radial-gradient(at 98% 10%, rgba(244, 114, 182, 0.14) 0px, transparent 45%),
+    radial-gradient(at 50% 100%, rgba(56, 189, 248, 0.12) 0px, transparent 50%);
+}
+
+@keyframes float-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float-in {
+  animation: float-in 0.4s ease-out both;
+}
+
+/* Thin, friendly scrollbars inside chat panes */
+.scroll-soft::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-soft::-webkit-scrollbar-thumb {
+  background: #f0e3cc;
+  border-radius: 9999px;
 }

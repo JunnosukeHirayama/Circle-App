@@ -1,0 +1,177 @@
+// Circle App - Prisma schema
+// DB: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================================================
+// BetterAuth core models
+// ===========================================================================
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+
+  // --- profile (applicant side) ---
+  bio         String? // 自己紹介
+  affiliation String? // 大学名 / 会社名など
+  location    String? // 活動希望エリア
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions     Session[]
+  accounts     Account[]
+  circles      Circle[]      @relation("OwnedCircles")
+  applications Application[] @relation("UserApplications")
+  messages     Message[]     @relation("UserMessages")
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+// ===========================================================================
+// Circle App domain models
+// ===========================================================================
+
+enum CircleAudience {
+  STUDENT // 学生限定
+  WORKING // 社会人限定
+  BOTH // 学生・社会人どちらもOK
+}
+
+model Circle {
+  id          String         @id @default(cuid())
+  name        String
+  description String // 活動内容
+  rules       String? // ルール・規約
+  category    String // スポーツ / 音楽 / 勉強 など
+  audience    CircleAudience @default(BOTH) // 対象者
+  location    String? // 活動エリア
+  memberCount Int     @default(1)
+  capacity    Int? // 募集上限
+  coverColor  String  @default("amber") // 画像が無いときのテーマカラー
+  images      String[] @default([]) // 最大5枚。先頭がメイン（一覧サムネイル）
+  tags        String[] @default([])
+
+  ownerId String
+  owner   User   @relation("OwnedCircles", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  applications Application[]
+  chatRooms    ChatRoom[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([category])
+  @@index([audience])
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Application {
+  id      String @id @default(cuid())
+
+  circleId String
+  circle   Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  applicantId String
+  applicant   User   @relation("UserApplications", fields: [applicantId], references: [id], onDelete: Cascade)
+
+  message String // 応募メッセージ
+  status  ApplicationStatus @default(PENDING)
+
+  chatRoom ChatRoom?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([circleId, applicantId]) // 同じサークルへの重複応募を防ぐ
+  @@index([applicantId])
+}
+
+model ChatRoom {
+  id String @id @default(cuid())
+
+  circleId String
+  circle   Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id String @id @default(cuid())
+
+  roomId String
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation("UserMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([roomId])
+}
