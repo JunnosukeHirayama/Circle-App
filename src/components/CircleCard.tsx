@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { MapPin, Users } from "lucide-react";
-import { coverTheme, audienceMeta } from "@/lib/constants";
+import { MapPin, Users, Wallet } from "lucide-react";
+import { coverTheme, audienceMeta, feeLabel } from "@/lib/constants";
 import { Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,10 @@ export type CircleCardData = {
   images: string[];
   tags: string[];
   audience: string;
+  recruiting: boolean;
+  hasFee: boolean;
+  feeText: string | null;
+  area: string;
 };
 
 export function CircleCard({ circle }: { circle: CircleCardData }) {
@@ -33,12 +37,23 @@ export function CircleCard({ circle }: { circle: CircleCardData }) {
       <div className={cn("relative h-32 overflow-hidden", theme.bg)}>
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt={circle.name} className="h-full w-full object-cover" />
+          <img
+            src={cover}
+            alt={circle.name}
+            className={cn("h-full w-full object-cover", !circle.recruiting && "opacity-60 grayscale")}
+          />
         ) : (
           <>
             <div className={cn("absolute -right-6 -top-8 h-28 w-28 rounded-full opacity-50", theme.solid)} />
             <div className={cn("absolute right-10 top-10 h-16 w-16 rounded-full opacity-40", theme.solid)} />
           </>
+        )}
+        {!circle.recruiting && (
+          <div className="absolute inset-0 grid place-items-center bg-stone-900/35">
+            <span className="rounded-full bg-stone-800/90 px-4 py-1.5 text-sm font-bold text-white">
+              募集停止中
+            </span>
+          </div>
         )}
         <span
           className={cn(
@@ -64,15 +79,22 @@ export function CircleCard({ circle }: { circle: CircleCardData }) {
           {circle.description}
         </p>
 
-        {circle.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {circle.tags.slice(0, 3).map((t) => (
-              <span key={t} className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs text-stone-500">
-                #{t}
-              </span>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold",
+              circle.hasFee ? "bg-orange-100 text-orange-700" : "bg-stone-100 text-stone-500",
+            )}
+          >
+            <Wallet className="h-3 w-3" />
+            {feeLabel(circle.hasFee, circle.feeText)}
+          </span>
+          {circle.tags.slice(0, 2).map((t) => (
+            <span key={t} className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs text-stone-500">
+              #{t}
+            </span>
+          ))}
+        </div>
 
         <div className="mt-1 flex items-center justify-between border-t border-stone-100 pt-3 text-xs text-stone-500">
           <span className="flex items-center gap-1">
@@ -80,13 +102,13 @@ export function CircleCard({ circle }: { circle: CircleCardData }) {
             {circle.memberCount}
             {circle.capacity != null && ` / ${circle.capacity}`}人
           </span>
-          {circle.location && (
-            <span className="flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" />
-              {circle.location}
-            </span>
-          )}
-          {full ? (
+          <span className="flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5" />
+            {circle.area}
+          </span>
+          {!circle.recruiting ? (
+            <Badge className="bg-stone-200 text-stone-600">募集停止中</Badge>
+          ) : full ? (
             <Badge className="bg-stone-100 text-stone-500">満員</Badge>
           ) : (
             <Badge className="bg-emerald-100 text-emerald-600">募集中</Badge>

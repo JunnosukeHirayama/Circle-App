@@ -15,3 +15,12 @@ export async function getCurrentUser() {
   const session = await getSession();
   return session?.user ?? null;
 }
+
+/** Reads the account role from a user object ("APPLICANT" | "ORGANIZER"). */
+export function roleOf(user: { role?: string | null } | null | undefined): string {
+  return user?.role ?? "APPLICANT";
+}
+
+export function isOrganizer(user: { role?: string | null } | null | undefined): boolean {
+  return roleOf(user) === "ORGANIZER";
+}

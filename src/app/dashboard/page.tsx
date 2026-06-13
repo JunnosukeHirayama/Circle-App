@@ -3,21 +3,16 @@ import { redirect } from "next/navigation";
 import {
   Plus,
   Users,
-  Inbox,
   MessageCircle,
-  Check,
-  X,
   MapPin,
+  Wallet,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
-import { updateApplicationStatus } from "@/app/actions/applications";
-import {
-  APPLICATION_STATUS_LABEL,
-  APPLICATION_STATUS_STYLE,
-  coverTheme,
-} from "@/lib/constants";
+import { getCurrentUser, isOrganizer } from "@/lib/session";
+import { setRecruiting } from "@/app/actions/circles";
+import { coverTheme, feeLabel } from "@/lib/constants";
 import { Avatar, ButtonLink } from "@/components/ui";
+import { ApplicationMenu } from "@/components/ApplicationMenu";
 import { cn, timeAgo } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +20,15 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?redirect=/dashboard");
+  if (!isOrganizer(user)) redirect("/circles");
+
+  // ブロック済みの応募者は一覧から除外する
+  const blockedIds = (
+    await prisma.block.findMany({
+      where: { blockerId: user.id },
+      select: { blockedId: true },
+    })
+  ).map((b) => b.blockedId);
 
   const circles = await prisma.circle.findMany({
     where: { ownerId: user.id },
@@ -32,83 +36,94 @@ export default async function DashboardPage() {
     include: {
       _count: { select: { applications: true } },
       applications: {
+        where: blockedIds.length ? { applicantId: { notIn: blockedIds } } : undefined,
         orderBy: { createdAt: "desc" },
         include: { applicant: true, chatRoom: true },
       },
     },
   });
 
+  const circle = circles[0] ?? null;
   const allApplications = circles.flatMap((c) =>
     c.applications.map((a) => ({ ...a, circleName: c.name })),
   );
-  const pendingCount = allApplications.filter((a) => a.status === "PENDING").length;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-extrabold text-stone-800">ダッシュボード</h1>
-          <p className="mt-1 text-stone-500">あなたのサークルと応募状況を管理しましょう。</p>
+          <p className="mt-1 text-stone-500">あなたのサークルの応募状況を管理しましょう。</p>
         </div>
-        <ButtonLink href="/circles/new">
-          <Plus className="h-4 w-4" />
-          サークルを作る
-        </ButtonLink>
-      </div>
-
-      {/* Stats */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat icon={Users} label="運営サークル" value={circles.length} color="bg-amber-100 text-amber-600" />
-        <Stat icon={Inbox} label="累計応募" value={allApplications.length} color="bg-sky-100 text-sky-600" />
-        <Stat icon={MessageCircle} label="未対応の応募" value={pendingCount} color="bg-rose-100 text-rose-600" />
-      </div>
-
-      {/* My circles */}
-      <section className="mt-10">
-        <h2 className="text-xl font-extrabold text-stone-800">あなたのサークル</h2>
-        {circles.length === 0 ? (
-          <div className="mt-4 rounded-4xl border border-dashed border-stone-200 bg-white/50 py-12 text-center">
-            <p className="font-semibold text-stone-600">まだサークルがありません</p>
-            <p className="mt-1 text-sm text-stone-400">最初のサークルを作って、仲間を募集しましょう。</p>
-            <ButtonLink href="/circles/new" className="mt-4">
-              <Plus className="h-4 w-4" />
-              サークルを作る
-            </ButtonLink>
-          </div>
-        ) : (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {circles.map((c) => {
-              const theme = coverTheme(c.coverColor);
-              return (
-                <div key={c.id} className="rounded-4xl border border-stone-100 bg-white p-5 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className={cn("grid h-11 w-11 place-items-center rounded-2xl text-sm font-bold", theme.bg, theme.text)}>
-                        {c.category.slice(0, 2)}
-                      </span>
-                      <div>
-                        <Link href={`/circles/${c.id}`} className="font-extrabold text-stone-800 hover:text-amber-600">
-                          {c.name}
-                        </Link>
-                        <p className="flex items-center gap-2 text-xs text-stone-400">
-                          <span className="flex items-center gap-0.5"><Users className="h-3 w-3" />{c.memberCount}人</span>
-                          {c.location && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{c.location}</span>}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-3">
-                    <span className="text-sm text-stone-500">応募 {c._count.applications}件</span>
-                    <Link href={`/circles/${c.id}/edit`} className="text-sm font-semibold text-amber-600 hover:underline">
-                      編集する
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {circle && (
+          <ButtonLink href={`/circles/${circle.id}/edit`} variant="secondary">
+            サークルを編集
+          </ButtonLink>
         )}
-      </section>
+      </div>
+
+      {!circle ? (
+        <div className="mt-8 rounded-4xl border border-dashed border-stone-200 bg-white/50 py-12 text-center">
+          <p className="font-semibold text-stone-600">まだサークルがありません</p>
+          <p className="mt-1 text-sm text-stone-400">サークルを作成して、仲間を募集しましょう。</p>
+          <ButtonLink href="/circles/new" className="mt-4">
+            <Plus className="h-4 w-4" />
+            サークルを作る
+          </ButtonLink>
+        </div>
+      ) : (
+        <>
+          {/* 自分のサークル概要 */}
+          <div className="mt-6 rounded-4xl border border-stone-100 bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    "grid h-12 w-12 place-items-center rounded-2xl text-sm font-bold",
+                    coverTheme(circle.coverColor).bg,
+                    coverTheme(circle.coverColor).text,
+                  )}
+                >
+                  {circle.category.slice(0, 2)}
+                </span>
+                <div>
+                  <Link href={`/circles/${circle.id}`} className="text-lg font-extrabold text-stone-800 hover:text-amber-600">
+                    {circle.name}
+                  </Link>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-stone-400">
+                    <span className="flex items-center gap-0.5"><Users className="h-3 w-3" />{circle.memberCount}{circle.capacity != null && ` / ${circle.capacity}`}人</span>
+                    <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{circle.area}</span>
+                    <span className="flex items-center gap-0.5"><Wallet className="h-3 w-3" />{feeLabel(circle.hasFee, circle.feeText)}</span>
+                  </p>
+                </div>
+              </div>
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-3 py-1 text-xs font-semibold",
+                  circle.recruiting ? "bg-emerald-100 text-emerald-600" : "bg-stone-200 text-stone-600",
+                )}
+              >
+                {circle.recruiting ? "募集中" : "募集停止中"}
+              </span>
+            </div>
+            <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-4">
+              <span className="text-sm text-stone-500">
+                累計応募 <span className="font-bold text-stone-800">{allApplications.length}</span> 件
+              </span>
+              <div className="flex items-center gap-4">
+                <form action={setRecruiting.bind(null, circle.id, !circle.recruiting)}>
+                  <button type="submit" className="text-sm font-semibold text-stone-500 hover:text-stone-700">
+                    {circle.recruiting ? "募集を停止" : "募集を再開"}
+                  </button>
+                </form>
+                <Link href={`/circles/${circle.id}`} className="text-sm font-semibold text-amber-600 hover:underline">
+                  サークルを見る
+                </Link>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Applications */}
       <section className="mt-10">
@@ -134,9 +149,10 @@ export default async function DashboardPage() {
                       </p>
                     </div>
                   </div>
-                  <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", APPLICATION_STATUS_STYLE[app.status])}>
-                    {APPLICATION_STATUS_LABEL[app.status]}
-                  </span>
+                  <ApplicationMenu
+                    blockedUserId={app.applicantId}
+                    applicantName={app.applicant.name}
+                  />
                 </div>
 
                 {app.applicant.bio && (
@@ -155,50 +171,12 @@ export default async function DashboardPage() {
                       チャット
                     </ButtonLink>
                   )}
-                  {app.status === "PENDING" && (
-                    <>
-                      <form action={updateApplicationStatus.bind(null, app.id, "ACCEPTED")}>
-                        <button className="inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-500 px-4 text-sm font-semibold text-white transition hover:bg-emerald-400">
-                          <Check className="h-4 w-4" />
-                          参加OK
-                        </button>
-                      </form>
-                      <form action={updateApplicationStatus.bind(null, app.id, "REJECTED")}>
-                        <button className="inline-flex h-9 items-center gap-1.5 rounded-full bg-white px-4 text-sm font-semibold text-stone-500 ring-1 ring-stone-200 transition hover:bg-stone-50">
-                          <X className="h-4 w-4" />
-                          見送り
-                        </button>
-                      </form>
-                    </>
-                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
       </section>
-    </div>
-  );
-}
-
-function Stat({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number;
-  color: string;
-}) {
-  return (
-    <div className="rounded-4xl border border-stone-100 bg-white p-5 shadow-sm">
-      <span className={cn("grid h-10 w-10 place-items-center rounded-2xl", color)}>
-        <Icon className="h-5 w-5" />
-      </span>
-      <p className="mt-3 text-2xl font-extrabold text-stone-800">{value}</p>
-      <p className="text-sm text-stone-500">{label}</p>
     </div>
   );
 }

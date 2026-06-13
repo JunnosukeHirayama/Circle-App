@@ -38,11 +38,15 @@ export default async function EditCirclePage({
             rules: circle.rules,
             category: circle.category,
             audience: circle.audience,
+            frequency: circle.frequency,
+            area: circle.area,
             location: circle.location,
             capacity: circle.capacity,
             coverColor: circle.coverColor,
             tags: circle.tags,
             images: circle.images,
+            hasFee: circle.hasFee,
+            feeText: circle.feeText,
           }}
         />
       </div>

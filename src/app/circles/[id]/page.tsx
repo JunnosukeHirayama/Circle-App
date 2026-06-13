@@ -8,10 +8,17 @@ import {
   Pencil,
   MessageCircle,
   CheckCircle2,
+  Wallet,
+  Briefcase,
+  PauseCircle,
+  Info,
+  Target,
+  Repeat,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
-import { coverTheme, audienceMeta } from "@/lib/constants";
+import { getCurrentUser, isOrganizer } from "@/lib/session";
+import { coverTheme, audienceMeta, feeLabel } from "@/lib/constants";
+import { setRecruiting } from "@/app/actions/circles";
 import { Avatar, ButtonLink, Card } from "@/components/ui";
 import { ApplyForm } from "@/components/ApplyForm";
 import { CircleGallery } from "@/components/CircleGallery";
@@ -30,7 +37,17 @@ export default async function CircleDetailPage({
   if (!circle) notFound();
 
   const user = await getCurrentUser();
+
+  // ブロックされている場合は、その募集者のサークルは見えない
+  if (user && user.id !== circle.ownerId) {
+    const blocked = await prisma.block.findUnique({
+      where: { blockerId_blockedId: { blockerId: circle.ownerId, blockedId: user.id } },
+    });
+    if (blocked) notFound();
+  }
+
   const isOwner = user?.id === circle.ownerId;
+  const userIsOrganizer = isOrganizer(user);
 
   const myApplication = user
     ? await prisma.application.findUnique({
@@ -70,28 +87,21 @@ export default async function CircleDetailPage({
                 </ButtonLink>
               )}
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-stone-500">
-              <span className={cn("rounded-full px-3 py-1 text-xs font-bold", audienceMeta(circle.audience).style)}>
-                {audienceMeta(circle.audience).icon} {audienceMeta(circle.audience).label}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
+                {circle.category}
               </span>
-              <span className="flex items-center gap-1.5">
-                <Users className="h-4 w-4" />
-                メンバー {circle.memberCount}
-                {circle.capacity != null && ` / ${circle.capacity}`}人
-              </span>
-              {circle.location && (
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4" />
-                  {circle.location}
-                </span>
-              )}
               <span
                 className={cn(
-                  "rounded-full px-3 py-0.5 text-xs font-semibold",
-                  full ? "bg-stone-100 text-stone-500" : "bg-emerald-100 text-emerald-600",
+                  "rounded-full px-3 py-1 text-xs font-semibold",
+                  !circle.recruiting
+                    ? "bg-stone-200 text-stone-600"
+                    : full
+                      ? "bg-stone-100 text-stone-500"
+                      : "bg-emerald-100 text-emerald-600",
                 )}
               >
-                {full ? "満員" : "メンバー募集中"}
+                {!circle.recruiting ? "募集停止中" : full ? "満員" : "メンバー募集中"}
               </span>
             </div>
             {circle.tags.length > 0 && (
@@ -104,6 +114,37 @@ export default async function CircleDetailPage({
               </div>
             )}
           </div>
+
+          {/* 基本情報 */}
+          <Card>
+            <h2 className="flex items-center gap-2 text-lg font-extrabold text-stone-800">
+              <Info className="h-5 w-5 text-amber-500" />
+              基本情報
+            </h2>
+            <dl className="mt-4 divide-y divide-stone-100">
+              <InfoRow icon={Target} label="対象者">
+                <span className={cn("rounded-full px-2.5 py-0.5 text-sm font-bold", audienceMeta(circle.audience).style)}>
+                  {audienceMeta(circle.audience).icon} {audienceMeta(circle.audience).label}
+                </span>
+              </InfoRow>
+              <InfoRow icon={Repeat} label="活動頻度">
+                {circle.frequency}
+              </InfoRow>
+              <InfoRow icon={MapPin} label="活動場所">
+                {circle.area}
+                {circle.location && (
+                  <span className="text-stone-400">（{circle.location}）</span>
+                )}
+              </InfoRow>
+              <InfoRow icon={Wallet} label="会費">
+                {feeLabel(circle.hasFee, circle.feeText)}
+              </InfoRow>
+              <InfoRow icon={Users} label="メンバー">
+                {circle.memberCount}
+                {circle.capacity != null && ` / ${circle.capacity}`}人
+              </InfoRow>
+            </dl>
+          </Card>
 
           <Card>
             <h2 className="flex items-center gap-2 text-lg font-extrabold text-stone-800">
@@ -151,6 +192,23 @@ export default async function CircleDetailPage({
                 <ButtonLink href="/dashboard" className="mt-4 w-full">
                   応募者を確認する（{circle._count.applications}件）
                 </ButtonLink>
+                <form
+                  action={setRecruiting.bind(null, circle.id, !circle.recruiting)}
+                  className="mt-3"
+                >
+                  <button
+                    type="submit"
+                    className={cn(
+                      "inline-flex w-full items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold transition",
+                      circle.recruiting
+                        ? "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                        : "bg-emerald-500 text-white hover:bg-emerald-400",
+                    )}
+                  >
+                    <PauseCircle className="h-4 w-4" />
+                    {circle.recruiting ? "募集を停止する" : "募集を再開する"}
+                  </button>
+                </form>
               </div>
             ) : myApplication ? (
               <div className="text-center">
@@ -185,6 +243,22 @@ export default async function CircleDetailPage({
                   新規登録はこちら
                 </Link>
               </div>
+            ) : userIsOrganizer ? (
+              <div className="text-center">
+                <Briefcase className="mx-auto h-9 w-9 text-stone-300" />
+                <p className="mt-3 font-bold text-stone-700">募集者用アカウントでは応募できません</p>
+                <p className="mt-1 text-sm text-stone-500">
+                  サークルに応募するには、一般ユーザー用アカウントでご利用ください。
+                </p>
+              </div>
+            ) : !circle.recruiting ? (
+              <div className="text-center">
+                <PauseCircle className="mx-auto h-9 w-9 text-stone-300" />
+                <p className="mt-3 font-bold text-stone-700">現在は募集を停止しています</p>
+                <p className="mt-1 text-sm text-stone-500">
+                  募集が再開されるまでお待ちください。
+                </p>
+              </div>
             ) : full ? (
               <p className="py-4 text-center text-sm text-stone-500">
                 現在このサークルは満員です。
@@ -198,6 +272,26 @@ export default async function CircleDetailPage({
           </Card>
         </aside>
       </div>
+    </div>
+  );
+}
+
+function InfoRow({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-3">
+      <dt className="flex items-center gap-2 text-sm font-semibold text-stone-500">
+        <Icon className="h-4 w-4 text-stone-400" />
+        {label}
+      </dt>
+      <dd className="text-right text-sm font-bold text-stone-800">{children}</dd>
     </div>
   );
 }

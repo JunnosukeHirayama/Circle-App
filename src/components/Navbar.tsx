@@ -16,9 +16,17 @@ import { useSession, signOut } from "@/lib/auth-client";
 import { Avatar, ButtonLink } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
+type NavLink = {
+  href: string;
+  label: string;
+  icon: typeof Compass;
+  auth?: boolean;
+  organizerOnly?: boolean;
+};
+
+const navLinks: NavLink[] = [
   { href: "/circles", label: "サークルを探す", icon: Compass },
-  { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard, auth: true },
+  { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard, auth: true, organizerOnly: true },
   { href: "/chat", label: "チャット", icon: MessageCircle, auth: true },
 ];
 
@@ -28,6 +36,10 @@ export function Navbar() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const user = session?.user;
+  const isOrganizer = (user as { role?: string } | undefined)?.role === "ORGANIZER";
+  const visibleLinks = navLinks.filter(
+    (l) => (!l.auth || user) && (!l.organizerOnly || isOrganizer),
+  );
 
   async function handleSignOut() {
     await signOut();
@@ -47,8 +59,7 @@ export function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          {navLinks
-            .filter((l) => !l.auth || user)
+          {visibleLinks
             .map((l) => {
               const active = pathname.startsWith(l.href);
               return (
@@ -80,7 +91,17 @@ export function Navbar() {
                 className="flex items-center gap-2 rounded-full p-1 pr-3 transition hover:bg-amber-50"
               >
                 <Avatar name={user.name} image={user.image} size={32} />
-                <span className="text-sm font-semibold text-stone-700">{user.name}</span>
+                <span className="flex flex-col leading-tight">
+                  <span className="text-sm font-semibold text-stone-700">{user.name}</span>
+                  <span
+                    className={cn(
+                      "text-[10px] font-bold",
+                      isOrganizer ? "text-violet-500" : "text-sky-500",
+                    )}
+                  >
+                    {isOrganizer ? "募集アカウント" : "一般ユーザー"}
+                  </span>
+                </span>
               </Link>
               <button
                 onClick={handleSignOut}
@@ -119,8 +140,7 @@ export function Navbar() {
       {open && (
         <div className="border-t border-amber-100 bg-white px-4 py-3 md:hidden">
           <nav className="flex flex-col gap-1">
-            {navLinks
-              .filter((l) => !l.auth || user)
+            {visibleLinks
               .map((l) => (
                 <Link
                   key={l.href}

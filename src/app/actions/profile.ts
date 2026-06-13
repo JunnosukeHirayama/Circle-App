@@ -11,6 +11,7 @@ const profileSchema = z.object({
   bio: z.string().trim().max(500).optional().or(z.literal("")),
   affiliation: z.string().trim().max(80).optional().or(z.literal("")),
   location: z.string().trim().max(60).optional().or(z.literal("")),
+  emailNotifications: z.enum(["on", "off"]).optional(),
 });
 
 export type ProfileState = { error?: string; ok?: boolean };
@@ -35,6 +36,7 @@ export async function updateProfile(
       bio: d.bio || null,
       affiliation: d.affiliation || null,
       location: d.location || null,
+      emailNotifications: d.emailNotifications !== "off",
     },
   });
 
