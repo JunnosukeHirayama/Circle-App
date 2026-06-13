@@ -18,7 +18,7 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirectTo = params.get("redirect") || "/dashboard";
+  const redirectParam = params.get("redirect");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,13 +29,15 @@ function LoginForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error } = await signIn.email({ email, password });
+    const { data, error } = await signIn.email({ email, password });
     setLoading(false);
     if (error) {
       setError(error.message || "メールアドレスまたはパスワードが正しくありません");
       return;
     }
-    router.push(redirectTo);
+    const role = (data?.user as { role?: string } | undefined)?.role;
+    const dest = redirectParam || (role === "ORGANIZER" ? "/dashboard" : "/circles");
+    router.push(dest);
     router.refresh();
   }
 

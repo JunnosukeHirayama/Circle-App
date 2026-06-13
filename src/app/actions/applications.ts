@@ -33,9 +33,14 @@ export async function applyToCircle(
   }
   const { circleId, message } = parsed.data;
 
+  if ((user as { role?: string }).role === "ORGANIZER") {
+    return { error: "募集者用アカウントでは応募できません" };
+  }
+
   const circle = await prisma.circle.findUnique({ where: { id: circleId } });
   if (!circle) return { error: "サークルが見つかりません" };
   if (circle.ownerId === user.id) return { error: "自分のサークルには応募できません" };
+  if (!circle.recruiting) return { error: "このサークルは現在募集を停止しています" };
 
   const existing = await prisma.application.findUnique({
     where: { circleId_applicantId: { circleId, applicantId: user.id } },

@@ -19,6 +19,9 @@ export const auth = betterAuth({
       : Array.from({ length: 11 }, (_, i) => `http://localhost:${3000 + i}`),
   user: {
     additionalFields: {
+      // "APPLICANT" | "ORGANIZER"
+      role: { type: "string", required: false, defaultValue: "APPLICANT", input: true },
+      emailNotifications: { type: "boolean", required: false, defaultValue: true },
       bio: { type: "string", required: false },
       affiliation: { type: "string", required: false },
       location: { type: "string", required: false },

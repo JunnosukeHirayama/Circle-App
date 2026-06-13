@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { getBlockRelatedIds } from "@/lib/blocks";
 import { Avatar } from "@/components/ui";
 import { timeAgo } from "@/lib/utils";
 
@@ -12,7 +13,7 @@ export default async function ChatListPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?redirect=/chat");
 
-  const rooms = await prisma.chatRoom.findMany({
+  const allRooms = await prisma.chatRoom.findMany({
     where: {
       OR: [
         { circle: { ownerId: user.id } },
@@ -25,6 +26,14 @@ export default async function ChatListPage() {
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
     },
     orderBy: { createdAt: "desc" },
+  });
+
+  // ブロック関係のある相手とのチャットは非表示
+  const blockedWith = await getBlockRelatedIds(user.id);
+  const rooms = allRooms.filter((r) => {
+    const partnerId =
+      r.circle.ownerId === user.id ? r.application.applicantId : r.circle.ownerId;
+    return !blockedWith.has(partnerId);
   });
 
   // Sort by most recent message.
@@ -58,6 +67,8 @@ export default async function ChatListPage() {
           {rooms.map((room) => {
             const iAmOwner = room.circle.ownerId === user.id;
             const partner = iAmOwner ? room.application.applicant : room.circle.owner;
+            // 応募者から見た募集者名はサークル名
+            const partnerName = iAmOwner ? partner.name : room.circle.name;
             const last = room.messages[0];
             return (
               <Link
@@ -65,15 +76,17 @@ export default async function ChatListPage() {
                 href={`/chat/${room.id}`}
                 className="flex items-center gap-3 rounded-3xl border border-stone-100 bg-white p-4 shadow-sm transition hover:border-amber-200 hover:bg-amber-50/40"
               >
-                <Avatar name={partner.name} image={partner.image} size={52} />
+                <Avatar name={partnerName} image={partner.image} size={52} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="truncate font-bold text-stone-800">{partner.name}</p>
+                    <p className="truncate font-bold text-stone-800">{partnerName}</p>
                     {last && (
                       <span className="shrink-0 text-xs text-stone-400">{timeAgo(last.createdAt)}</span>
                     )}
                   </div>
-                  <p className="truncate text-xs font-semibold text-amber-600">{room.circle.name}</p>
+                  <p className="truncate text-xs font-semibold text-amber-600">
+                    {iAmOwner ? room.circle.name : "サークル運営"}
+                  </p>
                   {last && <p className="truncate text-sm text-stone-500">{last.content}</p>}
                 </div>
               </Link>

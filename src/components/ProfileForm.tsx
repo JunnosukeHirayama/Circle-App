@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
-import { Save, CheckCircle2 } from "lucide-react";
+import { useActionState, useState } from "react";
+import { Save, CheckCircle2, Bell } from "lucide-react";
 import { updateProfile, type ProfileState } from "@/app/actions/profile";
 import { Button, Field, Input, Textarea } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 export function ProfileForm({
   defaults,
@@ -13,15 +14,19 @@ export function ProfileForm({
     bio: string | null;
     affiliation: string | null;
     location: string | null;
+    emailNotifications: boolean;
   };
 }) {
   const [state, formAction, pending] = useActionState<ProfileState, FormData>(
     updateProfile,
     {},
   );
+  const [emailOn, setEmailOn] = useState(defaults.emailNotifications);
 
   return (
     <form action={formAction} className="space-y-5">
+      <input type="hidden" name="emailNotifications" value={emailOn ? "on" : "off"} />
+
       <Field label="お名前 / ニックネーム" htmlFor="name">
         <Input id="name" name="name" required defaultValue={defaults.name} maxLength={40} />
       </Field>
@@ -51,6 +56,40 @@ export function ProfileForm({
           />
         </Field>
       </div>
+
+      {/* メール通知トグル */}
+      <button
+        type="button"
+        onClick={() => setEmailOn((v) => !v)}
+        className="flex w-full items-center justify-between rounded-2xl border border-stone-200 px-4 py-3 text-left transition hover:bg-amber-50/50"
+      >
+        <span className="flex items-center gap-3">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-600">
+            <Bell className="h-4 w-4" />
+          </span>
+          <span>
+            <span className="block text-sm font-semibold text-stone-700">
+              新着メッセージのメール通知
+            </span>
+            <span className="block text-xs text-stone-400">
+              チャットに新しいメッセージが届いたらメールでお知らせ
+            </span>
+          </span>
+        </span>
+        <span
+          className={cn(
+            "relative h-6 w-11 shrink-0 rounded-full transition",
+            emailOn ? "bg-amber-400" : "bg-stone-300",
+          )}
+        >
+          <span
+            className={cn(
+              "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all",
+              emailOn ? "left-[22px]" : "left-0.5",
+            )}
+          />
+        </span>
+      </button>
 
       {state.error && (
         <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{state.error}</p>

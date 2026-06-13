@@ -21,6 +21,12 @@ model User {
   emailVerified Boolean  @default(false)
   image         String?
 
+  // アカウント種別: "APPLICANT"（探す側）/ "ORGANIZER"（募集する側）
+  role String @default("APPLICANT")
+
+  // メール通知（新着メッセージ）のオン/オフ
+  emailNotifications Boolean @default(true)
+
   // --- profile (applicant side) ---
   bio         String? // 自己紹介
   affiliation String? // 大学名 / 会社名など
@@ -34,8 +40,23 @@ model User {
   circles      Circle[]      @relation("OwnedCircles")
   applications Application[] @relation("UserApplications")
   messages     Message[]     @relation("UserMessages")
+  blocksMade     Block[] @relation("Blocker")
+  blocksReceived Block[] @relation("Blocked")
 
   @@map("user")
+}
+
+// 募集者が応募者をブロックする（ブロックされた側にはそのサークル/チャットが見えなくなる）
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 model Session {
@@ -99,9 +120,14 @@ model Circle {
   rules       String? // ルール・規約
   category    String // スポーツ / 音楽 / 勉強 など
   audience    CircleAudience @default(BOTH) // 対象者
-  location    String? // 活動エリア
+  frequency   String  @default("不定期") // 活動頻度（必須・例：毎週土曜 / 月1回）
+  area        String  @default("全国") // 活動場所（必須・検索用）: 都道府県 / 全国 / オンライン / 海外
+  location    String? // 詳細な場所（任意・市区町村など）
   memberCount Int     @default(1)
   capacity    Int? // 募集上限
+  recruiting  Boolean @default(true) // false = 募集停止中
+  hasFee      Boolean @default(false) // 会費の有無
+  feeText     String? // 会費の内容（自由記述: 例「月額500円」「年額3000円」「都度」）
   coverColor  String  @default("amber") // 画像が無いときのテーマカラー
   images      String[] @default([]) // 最大5枚。先頭がメイン（一覧サムネイル）
   tags        String[] @default([])
@@ -118,6 +144,7 @@ model Circle {
   @@index([ownerId])
   @@index([category])
   @@index([audience])
+  @@index([area])
 }
 
 enum ApplicationStatus {
