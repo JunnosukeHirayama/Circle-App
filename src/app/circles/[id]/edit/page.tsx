@@ -41,6 +41,7 @@ export default async function EditCirclePage({
             frequency: circle.frequency,
             area: circle.area,
             location: circle.location,
+            memberCount: circle.memberCount,
             capacity: circle.capacity,
             coverColor: circle.coverColor,
             tags: circle.tags,
