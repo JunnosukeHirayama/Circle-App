@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,9 +15,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Circle — サークルメンバー募集",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  title: {
+    default: "サークルリンク — サークルメンバー募集",
+    template: "%s | サークルリンク",
+  },
   description:
     "社会人・学生サークルのメンバー募集と参加が、もっと身近に。気になるサークルを見つけて、その場でチャットを始めよう。",
+  openGraph: {
+    title: "サークルリンク — サークルメンバー募集",
+    description:
+      "社会人・学生サークルのメンバー募集と参加が、もっと身近に。気になるサークルを見つけて、その場でチャットを始めよう。",
+    type: "website",
+    locale: "ja_JP",
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +44,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col bg-[#fffdf8]">
         <Navbar />
         <main className="flex-1">{children}</main>
+        <Footer />
       </body>
     </html>
   );

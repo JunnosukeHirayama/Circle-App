@@ -73,6 +73,15 @@ export const AUDIENCE_FILTERS = [
 
 export type AudienceFilterKey = (typeof AUDIENCE_FILTERS)[number]["key"];
 
+// --- 通報の理由 ---
+export const REPORT_REASONS = [
+  "スパム・宣伝",
+  "不適切な内容",
+  "迷惑行為・ハラスメント",
+  "なりすまし",
+  "その他",
+] as const;
+
 // --- アカウント種別 ---
 export const ROLES = {
   APPLICANT: "APPLICANT",

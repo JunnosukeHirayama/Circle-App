@@ -42,8 +42,23 @@ model User {
   messages     Message[]     @relation("UserMessages")
   blocksMade     Block[] @relation("Blocker")
   blocksReceived Block[] @relation("Blocked")
+  reportsMade    Report[] @relation("ReportsMade")
 
   @@map("user")
+}
+
+// 通報（サークル/ユーザーに対する報告）
+model Report {
+  id         String   @id @default(cuid())
+  reporterId String
+  reporter   User     @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType String // "CIRCLE" | "USER"
+  targetId   String
+  reason     String
+  detail     String?
+  createdAt  DateTime @default(now())
+
+  @@index([targetType, targetId])
 }
 
 // 募集者が応募者をブロックする（ブロックされた側にはそのサークル/チャットが見えなくなる）

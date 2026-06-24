@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { Avatar } from "@/components/ui";
 import { ChatRoom, type ChatMessage } from "@/components/ChatRoom";
+import { ReportButton } from "@/components/ReportButton";
 
 export default async function ChatRoomPage({
   params,
@@ -72,6 +73,7 @@ export default async function ChatRoomPage({
             <span className="truncate text-xs text-stone-400">サークル運営</span>
           )}
         </div>
+        <ReportButton targetType="USER" targetId={partner.id} label="" />
       </div>
 
       {/* Context banner */}

@@ -1,7 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap");
 @import "tailwindcss";
 
 /* =========================================================================
-   Circle App — bright & friendly design system
+   サークルリンク — bright & friendly design system
+   親しみやすい丸ゴシック（M PLUS Rounded 1c）をベースフォントに採用
    ========================================================================= */
 
 :root {
@@ -23,7 +25,7 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
 
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-sans: "M PLUS Rounded 1c", var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 
   --radius-4xl: 2rem;

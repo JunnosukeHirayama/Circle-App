@@ -163,9 +163,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <footer className="border-t border-amber-100 py-8 text-center text-sm text-stone-400">
-        <p>© 2026 Circle — みんなのサークル募集アプリ</p>
-      </footer>
     </div>
   );
 }

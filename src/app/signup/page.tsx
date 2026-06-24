@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, Search, Megaphone } from "lucide-react";
+import { Search, Megaphone } from "lucide-react";
 import { signUp } from "@/lib/auth-client";
 import { registerCircle } from "@/app/actions/circles";
 import { Button, Field, Input } from "@/components/ui";
 import { CircleFields } from "@/components/CircleFields";
+import { BrandMark } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 
 type Role = "APPLICANT" | "ORGANIZER";
@@ -80,9 +81,7 @@ export default function SignupPage() {
         )}
       >
         <div className="mb-6 text-center">
-          <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-amber-400 text-amber-950">
-            <Sparkles className="h-6 w-6" />
-          </span>
+          <BrandMark size={48} className="mx-auto mb-3" />
           <h1 className="text-2xl font-extrabold text-stone-800">はじめよう！</h1>
           <p className="mt-1 text-sm text-stone-500">無料登録して、サークルとつながろう</p>
         </div>
@@ -150,6 +149,18 @@ export default function SignupPage() {
           {error && (
             <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p>
           )}
+
+          <p className="text-center text-xs leading-relaxed text-stone-400">
+            登録すると、
+            <a href="/terms" target="_blank" className="font-semibold text-amber-600 hover:underline">
+              利用規約
+            </a>
+            と
+            <a href="/privacy" target="_blank" className="font-semibold text-amber-600 hover:underline">
+              プライバシーポリシー
+            </a>
+            に同意したものとみなされます。
+          </p>
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
             {loading ? "登録中..." : isOrg ? "サークルを登録して始める" : "無料で登録する"}
