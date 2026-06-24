@@ -44,6 +44,20 @@ export async function updateProfile(
   return { ok: true };
 }
 
+/** 通知設定（新着メッセージのメール通知）のみを更新する。 */
+export async function updateNotificationSettings(
+  enabled: boolean,
+): Promise<{ ok?: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "ログインが必要です" };
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailNotifications: enabled },
+  });
+  revalidatePath("/me");
+  return { ok: true };
+}
+
 /** アカウント削除。関連データ（サークル・応募・チャット等）も連鎖削除されます。 */
 export async function deleteAccount(): Promise<{ ok?: boolean; error?: string }> {
   const user = await getCurrentUser();
