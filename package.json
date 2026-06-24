@@ -31,7 +31,8 @@
       "esbuild"
     ],
     "overrides": {
-      "kysely": "0.28.17"
+      "kysely": "0.28.17",
+                "@swc/helpers": "^0.5.17"
     }
   },
   "dependencies": {
