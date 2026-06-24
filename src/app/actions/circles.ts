@@ -53,7 +53,7 @@ function parseImages(raw?: string): string[] {
   return raw
     .split(",")
     .map((u) => u.trim())
-    .filter((u) => u.startsWith("/uploads/circles/"))
+    .filter((u) => u.startsWith("/api/uploads/circles/"))
     .slice(0, 5);
 }
 

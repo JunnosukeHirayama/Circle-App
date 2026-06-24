@@ -3,19 +3,14 @@ import { randomUUID } from "node:crypto";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { getCurrentUser } from "@/lib/session";
+import { UPLOAD_DIR, UPLOAD_URL_PREFIX, ALLOWED_IMAGE_EXT } from "@/lib/uploads";
 
 export const runtime = "nodejs";
 
 const MAX_FILES = 5;
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB / 枚
-const ALLOWED: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
-};
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "circles");
+const CIRCLES_DIR = path.join(UPLOAD_DIR, "circles");
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
@@ -33,11 +28,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "画像は最大5枚までです" }, { status: 400 });
   }
 
-  await mkdir(UPLOAD_DIR, { recursive: true });
+  await mkdir(CIRCLES_DIR, { recursive: true });
 
   const urls: string[] = [];
   for (const file of files) {
-    const ext = ALLOWED[file.type];
+    const ext = ALLOWED_IMAGE_EXT[file.type];
     if (!ext) {
       return NextResponse.json(
         { error: "対応していない画像形式です（JPEG / PNG / WebP / GIF）" },
@@ -52,8 +47,8 @@ export async function POST(req: NextRequest) {
     }
     const name = `${randomUUID()}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(path.join(UPLOAD_DIR, name), buffer);
-    urls.push(`/uploads/circles/${name}`);
+    await writeFile(path.join(CIRCLES_DIR, name), buffer);
+    urls.push(`${UPLOAD_URL_PREFIX}/circles/${name}`);
   }
 
   return NextResponse.json({ urls });
