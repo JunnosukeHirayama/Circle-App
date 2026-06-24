@@ -22,6 +22,7 @@ import { setRecruiting } from "@/app/actions/circles";
 import { Avatar, ButtonLink, Card } from "@/components/ui";
 import { ApplyForm } from "@/components/ApplyForm";
 import { CircleGallery } from "@/components/CircleGallery";
+import { ReportButton } from "@/components/ReportButton";
 import { cn } from "@/lib/utils";
 
 export default async function CircleDetailPage({
@@ -181,6 +182,12 @@ export default async function CircleDetailPage({
               </div>
             </div>
           </Card>
+
+          {user && !isOwner && (
+            <div className="pt-1">
+              <ReportButton targetType="CIRCLE" targetId={circle.id} label="このサークルを通報する" />
+            </div>
+          )}
         </div>
 
         {/* Apply panel */}

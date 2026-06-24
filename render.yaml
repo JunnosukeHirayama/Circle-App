@@ -1,0 +1,53 @@
+# Render Blueprint — サークルリンク（ルートA: 常駐Node・単一インスタンス）
+# 使い方: Render Dashboard → New → Blueprint → このリポジトリを選択
+#
+# ポイント:
+# - disk を付けると Render は自動的に単一インスタンス運用になります。
+#   （メモリPub/Sub＋SSEのリアルタイムが正しく動く前提条件）
+# - 画像は永続ディスク /data に保存されます（UPLOAD_DIR=/data/uploads）。
+# - デプロイのたびに prisma migrate deploy が自動実行されます。
+
+services:
+  - type: web
+    name: circlelink
+    runtime: node
+    plan: starter # 常駐＋永続ディスクに必要（無料プランはスピンダウン/ディスク不可）
+    region: singapore # 日本から近いリージョン
+    branch: main
+    buildCommand: pnpm install && pnpm build
+    preDeployCommand: pnpm prisma migrate deploy
+    startCommand: pnpm start
+    healthCheckPath: /
+    autoDeploy: true
+    disk:
+      name: uploads
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: UPLOAD_DIR
+        value: /data/uploads
+      - key: DATABASE_URL
+        fromDatabase:
+          name: circlelink-db
+          property: connectionString
+      - key: BETTER_AUTH_SECRET
+        generateValue: true # Renderが自動生成
+      # ↓ デプロイ後に確定するURLを手動で設定（下の手順参照）
+      - key: BETTER_AUTH_URL
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      # ↓ メール送信を使う場合に設定（任意）
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: REPORT_TO_EMAIL
+        sync: false
+
+databases:
+  - name: circlelink-db
+    databaseName: circle_app
+    user: circle
+    plan: basic-256mb # 任意のプランに変更可
+    region: singapore

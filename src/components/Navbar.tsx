@@ -10,10 +10,10 @@ import {
   Menu,
   X,
   LogOut,
-  Sparkles,
 } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { Avatar, ButtonLink } from "@/components/ui";
+import { BrandMark } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 
 type NavLink = {
@@ -51,10 +51,10 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-amber-100/80 bg-[#fffdf8]/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 font-extrabold text-stone-800">
-          <span className="grid h-9 w-9 place-items-center rounded-2xl bg-amber-400 text-amber-950 shadow-sm shadow-amber-200">
-            <Sparkles className="h-5 w-5" />
+          <BrandMark size={36} />
+          <span className="text-lg">
+            サークル<span className="text-amber-500">リンク</span>
           </span>
-          <span className="text-lg">Circ<span className="text-amber-500">le</span></span>
         </Link>
 
         {/* Desktop nav */}

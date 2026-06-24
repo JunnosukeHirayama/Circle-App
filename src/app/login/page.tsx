@@ -3,9 +3,9 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles } from "lucide-react";
 import { signIn } from "@/lib/auth-client";
 import { Button, Field, Input } from "@/components/ui";
+import { BrandMark } from "@/components/Logo";
 
 export default function LoginPage() {
   return (
@@ -45,9 +45,7 @@ function LoginForm() {
     <div className="bg-warm flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
       <div className="w-full max-w-md animate-float-in rounded-4xl border border-stone-100 bg-white p-8 shadow-sm sm:p-10">
         <div className="mb-6 text-center">
-          <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-amber-400 text-amber-950">
-            <Sparkles className="h-6 w-6" />
-          </span>
+          <BrandMark size={48} className="mx-auto mb-3" />
           <h1 className="text-2xl font-extrabold text-stone-800">おかえりなさい！</h1>
           <p className="mt-1 text-sm text-stone-500">ログインしてサークル活動を続けよう</p>
         </div>

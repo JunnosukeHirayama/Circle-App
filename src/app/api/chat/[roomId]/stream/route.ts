@@ -60,6 +60,8 @@ export async function GET(
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
+      // リバースプロキシ（nginx等）でのバッファリングを無効化し即時配信
+      "X-Accel-Buffering": "no",
     },
   });
 }

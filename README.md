@@ -1,4 +1,4 @@
-# Circle — サークルメンバー募集アプリ
+# サークルリンク（CircleLink） — サークルメンバー募集アプリ
 
 社会人・学生サークルのメンバー募集と参加ができる Web アプリです。
 募集する側（運営）と探す側（一般ユーザー）に分かれ、応募すると運営に
@@ -111,13 +111,35 @@ src/
 └── lib/                    auth / prisma / session / realtime / constants
 ```
 
-## 本番運用メモ
+## デプロイ（Render / 常駐Node・単一インスタンス）
 
-- リアルタイムチャットは単一インスタンス前提のインメモリ Pub/Sub です。
-  複数インスタンスで動かす場合は `src/lib/realtime.ts` を Redis Pub/Sub などに
-  置き換えてください。
-- アップロード画像はローカルの `public/uploads/circles/` に保存されます
-  （`/api/upload`）。Vercel などのサーバーレス環境では永続化されないため、
-  本番では S3 / Cloudinary 等のオブジェクトストレージへ差し替えてください。
+リアルタイムチャットはサーバーのメモリ上の Pub/Sub ＋ SSE で動くため、
+**常駐プロセスかつ単一インスタンス**で運用します。リポジトリ同梱の
+[`render.yaml`](render.yaml) を使うと、Web サービス＋PostgreSQL＋永続ディスクが
+一括で作成されます（ディスクを付けると Render は自動的に単一インスタンスになります）。
+
+### 手順
+1. このリポジトリ（`render.yaml` を含む）を GitHub に push する。
+2. [Render](https://render.com) にサインアップ → **New +** → **Blueprint** → このリポジトリを選択 → `render.yaml` が検出されるので **Apply**。
+3. 初回デプロイ後にサービスURL（例: `https://circlelink.onrender.com`）が決まる。
+4. そのURLを環境変数に設定（Render: サービス → **Environment**）：
+   - `BETTER_AUTH_URL` = `https://<あなたのURL>`
+   - `NEXT_PUBLIC_APP_URL` = `https://<あなたのURL>`
+   - 保存すると自動で再デプロイされる（`NEXT_PUBLIC_*` はビルド時に埋め込まれるため再ビルドが必要）。
+5. （任意）メールを使うなら `RESEND_API_KEY` / `EMAIL_FROM` / `REPORT_TO_EMAIL` を設定。
+6. デプロイ時に `prisma migrate deploy` が自動実行され、DBにテーブルが作成される。
+7. （任意）デモデータを入れる場合は Render の **Shell** で `pnpm db:seed`。
+
+### 注意
+- 常駐＋永続ディスクには有料プラン（`starter`）が必要です。無料プランはスピンダウン＆ディスク非対応のため、SSE と画像保存が機能しません。
+- 永続ディスクにより **単一インスタンス固定**になります（＝リアルタイムが正しく動く）。水平スケールしたくなったら、`src/lib/realtime.ts` を Redis Pub/Sub 等に、画像を S3 / Cloudflare R2 等に置き換えてください（ルートB）。
+- Railway / Fly.io / VPS でも同様に「常駐Node＋単一インスタンス＋永続ボリューム」で動きます。
+
+## 実装メモ
+
+- 画像は `UPLOAD_DIR`（未設定時は `./uploads`、本番は `/data/uploads`）に保存し、
+  `/api/uploads/...` 経由で配信します（[`src/lib/uploads.ts`](src/lib/uploads.ts)）。
+- DBスキーマは Prisma マイグレーション管理です。ローカルでスキーマを変えたら
+  `pnpm db:migrate`（`prisma migrate dev`）、本番は `prisma migrate deploy`（デプロイ時に自動）。
 - `kysely` は `0.28.17` に固定しています（BetterAuth の kysely-adapter が
   参照する定数が 0.29 系のルートエクスポートから外れているため）。
