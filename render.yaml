@@ -14,7 +14,7 @@ services:
     plan: starter # 常駐＋永続ディスクに必要（無料プランはスピンダウン/ディスク不可）
     region: singapore # 日本から近いリージョン
     branch: main
-        buildCommand: pnpm store prune && pnpm install && pnpm build
+            buildCommand: pnpm install --no-frozen-lockfile && pnpm build
     preDeployCommand: pnpm prisma migrate deploy
     startCommand: pnpm start
     healthCheckPath: /
