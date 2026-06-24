@@ -14,6 +14,7 @@ import {
   Info,
   Target,
   Repeat,
+  UserPlus,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, isOrganizer } from "@/lib/session";
@@ -145,9 +146,11 @@ export default async function CircleDetailPage({
               <InfoRow icon={Wallet} label="会費">
                 {feeLabel(circle.hasFee, circle.feeText)}
               </InfoRow>
-              <InfoRow icon={Users} label="メンバー">
-                {circle.memberCount}
-                {circle.capacity != null && ` / ${circle.capacity}`}人
+              <InfoRow icon={Users} label="メンバー数">
+                {circle.memberCount}人
+              </InfoRow>
+              <InfoRow icon={UserPlus} label="募集人数">
+                {circle.capacity != null ? `${circle.capacity}人` : "制限なし"}
               </InfoRow>
             </dl>
           </Card>

@@ -23,6 +23,7 @@ export type CircleDefaults = {
   frequency?: string;
   area?: string;
   location?: string | null;
+  memberCount?: number | null;
   capacity?: number | null;
   coverColor?: string;
   tags?: string[];
@@ -174,16 +175,28 @@ export function CircleFields({
         </Field>
       </div>
 
-      <Field label="募集人数の上限（任意）" htmlFor="capacity">
-        <Input
-          id="capacity"
-          name="capacity"
-          type="number"
-          min={1}
-          defaultValue={defaults?.capacity ?? undefined}
-          placeholder="例：20"
-        />
-      </Field>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="現在のメンバー数（任意）" htmlFor="memberCount" hint="今いるメンバーの人数">
+          <Input
+            id="memberCount"
+            name="memberCount"
+            type="number"
+            min={0}
+            defaultValue={defaults?.memberCount ?? undefined}
+            placeholder="例：8"
+          />
+        </Field>
+        <Field label="募集人数の上限（任意）" htmlFor="capacity" hint="何人の新規メンバーを募集するか">
+          <Input
+            id="capacity"
+            name="capacity"
+            type="number"
+            min={1}
+            defaultValue={defaults?.capacity ?? undefined}
+            placeholder="例：20"
+          />
+        </Field>
+      </div>
 
       {/* 会費（必須） */}
       <div>

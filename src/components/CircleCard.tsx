@@ -99,8 +99,7 @@ export function CircleCard({ circle }: { circle: CircleCardData }) {
         <div className="mt-1 flex items-center justify-between border-t border-stone-100 pt-3 text-xs text-stone-500">
           <span className="flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            {circle.memberCount}
-            {circle.capacity != null && ` / ${circle.capacity}`}人
+            {circle.capacity != null ? `募集${circle.capacity}人` : "募集人数制限なし"}
           </span>
           <span className="flex items-center gap-1">
             <MapPin className="h-3.5 w-3.5" />

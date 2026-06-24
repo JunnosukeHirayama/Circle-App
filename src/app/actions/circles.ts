@@ -24,6 +24,10 @@ const circleSchema = z.object({
     .string()
     .refine((v) => AREA_OPTIONS.includes(v), { message: "活動場所を選択してください" }),
   location: z.string().trim().max(60).optional().or(z.literal("")),
+  memberCount: z.preprocess(
+    (v) => (v === "" || v == null ? undefined : v),
+    z.coerce.number().int().min(0).max(100000).optional(),
+  ),
   capacity: z.preprocess(
     (v) => (v === "" || v == null ? undefined : v),
     z.coerce.number().int().min(1).max(100000).optional(),
@@ -100,6 +104,7 @@ export async function createCircle(
       frequency: d.frequency,
       area: d.area,
       location: d.location || null,
+      memberCount: d.memberCount ?? 1,
       capacity: d.capacity ?? null,
       recruiting: d.recruiting !== "paused",
       hasFee: fee.hasFee,
@@ -152,6 +157,7 @@ export async function registerCircle(
       frequency: d.frequency,
       area: d.area,
       location: d.location || null,
+      memberCount: d.memberCount ?? 1,
       capacity: d.capacity ?? null,
       recruiting: d.recruiting !== "paused",
       hasFee: fee.hasFee,
@@ -203,6 +209,7 @@ export async function updateCircle(
       frequency: d.frequency,
       area: d.area,
       location: d.location || null,
+      memberCount: d.memberCount ?? 1,
       capacity: d.capacity ?? null,
       hasFee: fee.hasFee,
       feeText: fee.feeText,
