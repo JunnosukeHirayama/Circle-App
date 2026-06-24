@@ -43,3 +43,13 @@ export async function updateProfile(
   revalidatePath("/me");
   return { ok: true };
 }
+
+/** アカウント削除。関連データ（サークル・応募・チャット等）も連鎖削除されます。 */
+export async function deleteAccount(): Promise<{ ok?: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "ログインが必要です" };
+
+  // onDelete: Cascade により、所有サークル・応募・チャット・通報なども削除される
+  await prisma.user.delete({ where: { id: user.id } });
+  return { ok: true };
+}

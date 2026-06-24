@@ -13,7 +13,7 @@ const schema = z.object({
   detail: z.string().trim().max(1000).optional(),
 });
 
-const OPERATOR_EMAIL = process.env.REPORT_TO_EMAIL ?? "support@example.com";
+const OPERATOR_EMAIL = process.env.REPORT_TO_EMAIL ?? "circlelink.01@gmail.com";
 
 export async function submitReport(input: {
   targetType: "CIRCLE" | "USER";

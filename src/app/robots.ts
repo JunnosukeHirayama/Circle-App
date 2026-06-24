@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // ログインが必要・非公開の領域はクロール対象外
-      disallow: ["/dashboard", "/chat", "/me", "/api/"],
+      disallow: ["/dashboard", "/chat", "/me", "/admin", "/api/"],
     },
     sitemap: `${BASE}/sitemap.xml`,
   };

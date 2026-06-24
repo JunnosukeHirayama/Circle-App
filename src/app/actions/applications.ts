@@ -36,6 +36,9 @@ export async function applyToCircle(
   if ((user as { role?: string }).role === "ORGANIZER") {
     return { error: "募集者用アカウントでは応募できません" };
   }
+  if (!(user as { emailVerified?: boolean }).emailVerified) {
+    return { error: "応募するにはメールアドレスの確認が必要です。確認メールのリンクをクリックしてください。" };
+  }
 
   const circle = await prisma.circle.findUnique({ where: { id: circleId } });
   if (!circle) return { error: "サークルが見つかりません" };
