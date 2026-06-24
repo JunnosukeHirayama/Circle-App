@@ -31,8 +31,11 @@ export async function sendEmail({ to, subject, text }: SendArgs): Promise<void> 
       },
       body: JSON.stringify({ from: FROM, to, subject, text }),
     });
+    const body = await res.text();
     if (!res.ok) {
-      console.error("[email] Resend failed:", res.status, await res.text());
+      console.error(`[email] Resend failed (${res.status}) to ${to}: ${body}`);
+    } else {
+      console.log(`[email] sent to ${to} (${subject}) → ${body}`);
     }
   } catch (err) {
     console.error("[email] send error:", err);

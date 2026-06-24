@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, isOrganizer } from "@/lib/session";
 import { Avatar, Card } from "@/components/ui";
 import { ProfileForm } from "@/components/ProfileForm";
+import { DeleteAccount } from "@/components/DeleteAccount";
 import { cn, timeAgo } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -105,6 +106,11 @@ export default async function MePage() {
             }}
           />
         </Card>
+      </section>
+
+      {/* アカウント削除 */}
+      <section className="mt-10">
+        <DeleteAccount />
       </section>
     </div>
   );

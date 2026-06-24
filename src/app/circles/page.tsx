@@ -49,6 +49,8 @@ export default async function CirclesPage({
   if (area) where.area = area;
   if (fee === "free") where.hasFee = false;
   if (fee === "paid") where.hasFee = true;
+  // 募集者がメール未確認のサークルは公開一覧に出さない
+  where.owner = { is: { emailVerified: true } };
   if (q && q.trim()) {
     where.OR = [
       { name: { contains: q, mode: "insensitive" } },

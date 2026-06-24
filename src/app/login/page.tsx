@@ -81,6 +81,12 @@ function LoginForm() {
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
             {loading ? "ログイン中..." : "ログイン"}
           </Button>
+
+          <p className="text-center text-sm">
+            <Link href="/forgot-password" className="font-semibold text-amber-600 hover:underline">
+              パスワードをお忘れですか？
+            </Link>
+          </p>
         </form>
 
         <p className="mt-6 text-center text-sm text-stone-500">

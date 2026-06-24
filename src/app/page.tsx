@@ -3,7 +3,7 @@ import {
   Search,
   MessageCircle,
   Send,
-  Sparkles,
+  Handshake,
   Users,
   Heart,
   ArrowRight,
@@ -28,7 +28,7 @@ export default async function HomePage() {
         <div className="grid items-center gap-10 md:grid-cols-2">
           <div className="animate-float-in">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-amber-600 shadow-sm">
-              <Sparkles className="h-4 w-4" />
+              <Handshake className="h-4 w-4" />
               社会人も学生も、つながる場所
             </span>
             <h1 className="mt-5 text-4xl font-extrabold leading-tight text-stone-800 sm:text-5xl">

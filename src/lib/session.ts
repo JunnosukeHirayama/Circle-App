@@ -24,3 +24,19 @@ export function roleOf(user: { role?: string | null } | null | undefined): strin
 export function isOrganizer(user: { role?: string | null } | null | undefined): boolean {
   return roleOf(user) === "ORGANIZER";
 }
+
+export function isVerified(
+  user: { emailVerified?: boolean | null } | null | undefined,
+): boolean {
+  return !!user?.emailVerified;
+}
+
+/** 運営（管理者）メールアドレス一覧。ADMIN_EMAILS（カンマ区切り）で設定。 */
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "circlelink.01@gmail.com")
+  .split(",")
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+
+export function isAdmin(user: { email?: string | null } | null | undefined): boolean {
+  return !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+}

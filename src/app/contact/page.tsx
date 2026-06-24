@@ -5,8 +5,7 @@ import { ButtonLink } from "@/components/ui";
 
 export const metadata: Metadata = { title: "お問い合わせ" };
 
-// リリース時に実際の連絡先へ差し替えてください
-const CONTACT_EMAIL = "support@example.com";
+const CONTACT_EMAIL = "circlelink.01@gmail.com";
 
 export default function ContactPage() {
   return (
@@ -32,8 +31,7 @@ export default function ContactPage() {
       <Section heading="運営者情報">
         <ul className="list-disc space-y-1 pl-5">
           <li>サービス名：サークルリンク</li>
-          <li>運営者：（事業者名・代表者名を記載してください）</li>
-          <li>所在地：（必要に応じて記載してください）</li>
+          <li>運営者：平山 準之助</li>
           <li>連絡先：{CONTACT_EMAIL}</li>
         </ul>
       </Section>

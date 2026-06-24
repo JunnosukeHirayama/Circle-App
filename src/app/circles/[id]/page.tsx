@@ -39,6 +39,11 @@ export default async function CircleDetailPage({
 
   const user = await getCurrentUser();
 
+  // 募集者がメール未確認のサークルは、本人以外には見えない
+  if (!circle.owner.emailVerified && user?.id !== circle.ownerId) {
+    notFound();
+  }
+
   // ブロックされている場合は、その募集者のサークルは見えない
   if (user && user.id !== circle.ownerId) {
     const blocked = await prisma.block.findUnique({
