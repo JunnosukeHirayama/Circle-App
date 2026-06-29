@@ -31,6 +31,7 @@ export type CircleDefaults = {
   audience?: string;
   hasFee?: boolean;
   feeText?: string | null;
+  requireVerified?: boolean;
 };
 
 /**
@@ -57,6 +58,9 @@ export function CircleFields({
   );
   const [hasFee, setHasFee] = useState<boolean>(defaults?.hasFee ?? false);
   const [publish, setPublish] = useState<"open" | "paused">("open");
+  const [requireVerified, setRequireVerified] = useState<boolean>(
+    defaults?.requireVerified ?? false,
+  );
 
   return (
     <div className="space-y-5">
@@ -64,6 +68,7 @@ export function CircleFields({
       <input type="hidden" name="audience" value={audience} />
       <input type="hidden" name="hasFee" value={hasFee ? "yes" : "no"} />
       {showPublish && <input type="hidden" name="recruiting" value={publish} />}
+      <input type="hidden" name="requireVerified" value={requireVerified ? "yes" : "no"} />
 
       <Field label={nameLabel} htmlFor="name">
         <Input
@@ -242,6 +247,35 @@ export function CircleFields({
           </div>
         )}
       </div>
+
+      {/* 本人確認済みのみ応募可 */}
+      <button
+        type="button"
+        onClick={() => setRequireVerified((v) => !v)}
+        className="flex w-full items-center justify-between rounded-2xl border border-stone-200 px-4 py-3 text-left transition hover:bg-sky-50/50"
+      >
+        <span>
+          <span className="block text-sm font-semibold text-stone-700">
+            本人確認済みのユーザーのみ応募可にする
+          </span>
+          <span className="block text-xs text-stone-400">
+            安心して運営したい場合におすすめ（応募者が限定されます）
+          </span>
+        </span>
+        <span
+          className={cn(
+            "relative h-6 w-11 shrink-0 rounded-full transition",
+            requireVerified ? "bg-sky-400" : "bg-stone-300",
+          )}
+        >
+          <span
+            className={cn(
+              "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all",
+              requireVerified ? "left-[22px]" : "left-0.5",
+            )}
+          />
+        </span>
+      </button>
 
       <Field label="タグ（任意）" htmlFor="tags" hint="スペースやカンマ区切りで入力（最大8個）">
         <Input

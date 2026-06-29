@@ -17,8 +17,13 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const circles = await prisma.circle.findMany({
+    where: { owner: { is: { emailVerified: true } } },
     orderBy: { createdAt: "desc" },
     take: 6,
+    include: {
+      owner: { select: { verificationStatus: true } },
+      reviews: { select: { rating: true } },
+    },
   });
 
   return (

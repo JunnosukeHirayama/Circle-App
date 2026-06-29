@@ -44,6 +44,15 @@ export async function applyToCircle(
   if (!circle) return { error: "サークルが見つかりません" };
   if (circle.ownerId === user.id) return { error: "自分のサークルには応募できません" };
   if (!circle.recruiting) return { error: "このサークルは現在募集を停止しています" };
+  if (circle.requireVerified) {
+    const me = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { verificationStatus: true },
+    });
+    if (me?.verificationStatus !== "VERIFIED") {
+      return { error: "このサークルは本人確認済みの方のみ応募できます。マイページから本人確認を行ってください。" };
+    }
+  }
 
   const existing = await prisma.application.findUnique({
     where: { circleId_applicantId: { circleId, applicantId: user.id } },

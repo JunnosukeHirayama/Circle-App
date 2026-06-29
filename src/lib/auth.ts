@@ -11,6 +11,8 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    // メール認証が完了するまでログイン不可（アカウントを使えない）
+    requireEmailVerification: true,
     // パスワード再設定メール
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
@@ -41,6 +43,7 @@ export const auth = betterAuth({
     additionalFields: {
       // "APPLICANT" | "ORGANIZER"
       role: { type: "string", required: false, defaultValue: "APPLICANT", input: true },
+      verificationStatus: { type: "string", required: false, defaultValue: "NONE", input: false },
       emailNotifications: { type: "boolean", required: false, defaultValue: true },
       bio: { type: "string", required: false },
       affiliation: { type: "string", required: false },

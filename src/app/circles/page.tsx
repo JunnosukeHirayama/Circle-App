@@ -69,6 +69,10 @@ export default async function CirclesPage({
   const circles = await prisma.circle.findMany({
     where,
     orderBy: { createdAt: "desc" },
+    include: {
+      owner: { select: { verificationStatus: true } },
+      reviews: { select: { rating: true } },
+    },
   });
 
   return (

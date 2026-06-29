@@ -38,6 +38,7 @@ const circleSchema = z.object({
   tags: z.string().optional(),
   images: z.string().optional(),
   recruiting: z.enum(["open", "paused"]).optional(),
+  requireVerified: z.enum(["yes", "no"]).optional(),
 });
 
 export type CircleFormState = { error?: string };
@@ -111,6 +112,7 @@ export async function createCircle(
       feeText: fee.feeText,
       coverColor: d.coverColor,
       tags: parseTags(d.tags),
+      requireVerified: d.requireVerified === "yes",
       images: parseImages(d.images),
       ownerId: user.id,
     },
@@ -164,6 +166,7 @@ export async function registerCircle(
       feeText: fee.feeText,
       coverColor: d.coverColor,
       tags: parseTags(d.tags),
+      requireVerified: d.requireVerified === "yes",
       images: parseImages(d.images),
       ownerId: user.id,
     },
@@ -215,6 +218,7 @@ export async function updateCircle(
       feeText: fee.feeText,
       coverColor: d.coverColor,
       tags: parseTags(d.tags),
+      requireVerified: d.requireVerified === "yes",
       images: parseImages(d.images),
     },
   });

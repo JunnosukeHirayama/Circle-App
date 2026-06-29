@@ -8,6 +8,11 @@ export const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "up
 // 画像を配信するURLの接頭辞（GET /api/uploads/...）。
 export const UPLOAD_URL_PREFIX = "/api/uploads";
 
+// 本人確認書類の保管先（公開ディレクトリ外。運営のみ閲覧）。
+// 本番では永続ディスク上（UPLOAD_DIR と同じディスクの別ディレクトリ）になる。
+export const VERIFY_DIR =
+  process.env.VERIFY_DIR ?? path.join(path.dirname(UPLOAD_DIR), "verify");
+
 export const ALLOWED_IMAGE_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",

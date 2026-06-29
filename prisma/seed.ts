@@ -32,6 +32,7 @@ async function ensureUser(opts: {
       affiliation: opts.affiliation ?? null,
       location: opts.location ?? null,
       emailVerified: true,
+      verificationStatus: "VERIFIED", // デモ用に本人確認済みにしておく
     },
   });
 }
@@ -199,6 +200,16 @@ async function main() {
     });
     await prisma.message.create({
       data: { roomId: room.id, senderId: applicant.id, content: app.message },
+    });
+
+    // サンプル口コミ
+    await prisma.review.create({
+      data: {
+        circleId: target.id,
+        reviewerId: applicant.id,
+        rating: 5,
+        comment: "初参加でも温かく迎えてもらえました。本好きにおすすめです！",
+      },
     });
   }
 
