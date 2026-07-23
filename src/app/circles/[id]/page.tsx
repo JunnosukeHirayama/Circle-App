@@ -24,6 +24,11 @@ import { Avatar, ButtonLink, Card } from "@/components/ui";
 import { ApplyForm } from "@/components/ApplyForm";
 import { CircleGallery } from "@/components/CircleGallery";
 import { ReportButton } from "@/components/ReportButton";
+import { CircleReviews, type ReviewItem } from "@/components/CircleReviews";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { TrustScoreInfo } from "@/components/TrustScoreInfo";
+import { trustScore, trustLabel } from "@/lib/trust";
+import { ShieldCheck, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default async function CircleDetailPage({
@@ -62,6 +67,30 @@ export default async function CircleDetailPage({
         include: { chatRoom: true },
       })
     : null;
+
+  // 口コミ・通報・安心スコア
+  const reviews = await prisma.review.findMany({
+    where: { circleId: id },
+    orderBy: { createdAt: "desc" },
+    include: { reviewer: { select: { name: true, image: true, verificationStatus: true } } },
+  });
+  const reviewCount = reviews.length;
+  const avgRating =
+    reviewCount > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviewCount : null;
+  const reportCount = await prisma.report.count({
+    where: { targetType: "CIRCLE", targetId: id },
+  });
+  const score = trustScore({
+    ownerVerified: circle.owner.verificationStatus === "VERIFIED",
+    avgRating,
+    reviewCount,
+    reportCount,
+    hasRules: !!circle.rules,
+  });
+  const scoreLabel = trustLabel(score);
+
+  const myReview = user ? reviews.find((r) => r.reviewerId === user.id) : undefined;
+  const canReview = !!user && !isOwner && !userIsOrganizer;
 
   const theme = coverTheme(circle.coverColor);
   const full = circle.capacity != null && circle.memberCount >= circle.capacity;
@@ -152,6 +181,25 @@ export default async function CircleDetailPage({
               <InfoRow icon={UserPlus} label="募集人数">
                 {circle.capacity != null ? `${circle.capacity}人` : "制限なし"}
               </InfoRow>
+              <InfoRow icon={ShieldCheck} label="安心スコア" labelExtra={<TrustScoreInfo />}>
+                <span className="inline-flex items-center gap-2">
+                  <span className="font-extrabold text-stone-800">{score}</span>
+                  <span className={cn("rounded-full px-2 py-0.5 text-xs font-bold", scoreLabel.style)}>
+                    {scoreLabel.label}
+                  </span>
+                </span>
+              </InfoRow>
+              <InfoRow icon={Star} label="口コミ評価">
+                {avgRating != null ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    {avgRating.toFixed(1)}
+                    <span className="text-xs text-stone-400">（{reviewCount}件）</span>
+                  </span>
+                ) : (
+                  <span className="text-stone-400">まだなし</span>
+                )}
+              </InfoRow>
             </dl>
           </Card>
 
@@ -183,11 +231,41 @@ export default async function CircleDetailPage({
             <div className="mt-3 flex items-center gap-3">
               <Avatar name={circle.owner.name} image={circle.owner.image} size={48} />
               <div>
-                <p className="font-bold text-stone-800">{circle.owner.name}</p>
-                {circle.owner.affiliation && (
-                  <p className="text-sm text-stone-500">{circle.owner.affiliation}</p>
+                <p className="flex items-center gap-1.5 font-bold text-stone-800">
+                  {circle.owner.name}
+                  <VerifiedBadge status={circle.owner.verificationStatus} />
+                </p>
+                {circle.owner.verificationStatus !== "VERIFIED" && (
+                  <p className="text-xs text-stone-400">本人確認は未完了です</p>
                 )}
               </div>
+            </div>
+          </Card>
+
+          {/* 口コミ・評価 */}
+          <Card>
+            <h2 className="flex items-center gap-2 text-lg font-extrabold text-stone-800">
+              <Star className="h-5 w-5 text-amber-500" />
+              口コミ・評価
+            </h2>
+            <div className="mt-3">
+              <CircleReviews
+                circleId={circle.id}
+                canReview={canReview}
+                myRating={myReview?.rating}
+                myComment={myReview?.comment ?? undefined}
+                reviews={reviews.map(
+                  (r): ReviewItem => ({
+                    id: r.id,
+                    reviewerName: r.reviewer.name,
+                    reviewerImage: r.reviewer.image,
+                    reviewerStatus: r.reviewer.verificationStatus,
+                    rating: r.rating,
+                    comment: r.comment,
+                    createdAt: r.createdAt.toISOString(),
+                  }),
+                )}
+              />
             </div>
           </Card>
 
@@ -278,8 +356,26 @@ export default async function CircleDetailPage({
               <p className="py-4 text-center text-sm text-stone-500">
                 現在このサークルは満員です。
               </p>
+            ) : circle.requireVerified &&
+              (user as { verificationStatus?: string }).verificationStatus !== "VERIFIED" ? (
+              <div className="text-center">
+                <ShieldCheck className="mx-auto h-9 w-9 text-sky-400" />
+                <p className="mt-3 font-bold text-stone-700">本人確認済みの方のみ応募できます</p>
+                <p className="mt-1 text-sm text-stone-500">
+                  マイページから本人確認をすると応募できるようになります。
+                </p>
+                <ButtonLink href="/me" variant="secondary" className="mt-4 w-full">
+                  本人確認をする
+                </ButtonLink>
+              </div>
             ) : (
               <>
+                {circle.requireVerified && (
+                  <p className="mb-3 flex items-center gap-1.5 rounded-2xl bg-sky-50 px-3 py-2 text-xs text-sky-700">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    本人確認済みのあなたは応募できます
+                  </p>
+                )}
                 <h3 className="mb-3 font-extrabold text-stone-800">応募メッセージ</h3>
                 <ApplyForm circleId={circle.id} />
               </>
@@ -294,17 +390,20 @@ export default async function CircleDetailPage({
 function InfoRow({
   icon: Icon,
   label,
+  labelExtra,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
+  labelExtra?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3">
-      <dt className="flex items-center gap-2 text-sm font-semibold text-stone-500">
+      <dt className="flex items-center gap-1.5 text-sm font-semibold text-stone-500">
         <Icon className="h-4 w-4 text-stone-400" />
         {label}
+        {labelExtra}
       </dt>
       <dd className="text-right text-sm font-bold text-stone-800">{children}</dd>
     </div>

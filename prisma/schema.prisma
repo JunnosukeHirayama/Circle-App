@@ -27,6 +27,9 @@ model User {
   // メール通知（新着メッセージ）のオン/オフ
   emailNotifications Boolean @default(true)
 
+  // 本人確認ステータス: "NONE" | "PENDING" | "VERIFIED" | "REJECTED"
+  verificationStatus String @default("NONE")
+
   // --- profile (applicant side) ---
   bio         String? // 自己紹介
   affiliation String? // 大学名 / 会社名など
@@ -43,8 +46,38 @@ model User {
   blocksMade     Block[] @relation("Blocker")
   blocksReceived Block[] @relation("Blocked")
   reportsMade    Report[] @relation("ReportsMade")
+  identityVerification IdentityVerification?
+  reviews        Review[] @relation("UserReviews")
 
   @@map("user")
+}
+
+// 本人確認の申請（書類は公開ディレクトリ外に保管し、運営のみ閲覧）
+model IdentityVerification {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status       String   @default("PENDING") // PENDING | VERIFIED | REJECTED
+  documentPath String // VERIFY_DIR 配下の相対パス
+  note         String? // 却下理由など
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// サークルへの口コミ・評価
+model Review {
+  id         String   @id @default(cuid())
+  circleId   String
+  circle     Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User     @relation("UserReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+  rating     Int // 1..5
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([circleId, reviewerId])
+  @@index([circleId])
 }
 
 // 通報（サークル/ユーザーに対する報告）
@@ -141,6 +174,7 @@ model Circle {
   memberCount Int     @default(1)
   capacity    Int? // 募集上限
   recruiting  Boolean @default(true) // false = 募集停止中
+  requireVerified Boolean @default(false) // true = 本人確認済みユーザーのみ応募可
   hasFee      Boolean @default(false) // 会費の有無
   feeText     String? // 会費の内容（自由記述: 例「月額500円」「年額3000円」「都度」）
   coverColor  String  @default("amber") // 画像が無いときのテーマカラー
@@ -152,6 +186,7 @@ model Circle {
 
   applications Application[]
   chatRooms    ChatRoom[]
+  reviews      Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

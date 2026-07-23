@@ -31,6 +31,13 @@ export function isVerified(
   return !!user?.emailVerified;
 }
 
+/** 本人確認（書類審査）が承認済みか。 */
+export function isIdentityVerified(
+  user: { verificationStatus?: string | null } | null | undefined,
+): boolean {
+  return user?.verificationStatus === "VERIFIED";
+}
+
 /** 運営（管理者）メールアドレス一覧。ADMIN_EMAILS（カンマ区切り）で設定。 */
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "circlelink.01@gmail.com")
   .split(",")

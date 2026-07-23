@@ -48,6 +48,7 @@ export default async function EditCirclePage({
             images: circle.images,
             hasFee: circle.hasFee,
             feeText: circle.feeText,
+            requireVerified: circle.requireVerified,
           }}
         />
       </div>

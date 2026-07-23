@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Users, Wallet } from "lucide-react";
+import { MapPin, Users, Wallet, BadgeCheck, Star } from "lucide-react";
 import { coverTheme, audienceMeta, feeLabel } from "@/lib/constants";
 import { Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,8 @@ export type CircleCardData = {
   hasFee: boolean;
   feeText: string | null;
   area: string;
+  owner?: { verificationStatus: string };
+  reviews?: { rating: number }[];
 };
 
 export function CircleCard({ circle }: { circle: CircleCardData }) {
@@ -27,6 +29,10 @@ export function CircleCard({ circle }: { circle: CircleCardData }) {
   const full = circle.capacity != null && circle.memberCount >= circle.capacity;
   const cover = circle.images?.[0];
   const aud = audienceMeta(circle.audience);
+  const ownerVerified = circle.owner?.verificationStatus === "VERIFIED";
+  const reviewCount = circle.reviews?.length ?? 0;
+  const avgRating =
+    reviewCount > 0 ? circle.reviews!.reduce((s, r) => s + r.rating, 0) / reviewCount : null;
 
   return (
     <Link
@@ -66,11 +72,23 @@ export function CircleCard({ circle }: { circle: CircleCardData }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-5">
-        <div>
+        <div className="flex flex-wrap items-center gap-1.5">
           <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold", aud.style)}>
             <span>{aud.icon}</span>
             {aud.label}
           </span>
+          {ownerVerified && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700">
+              <BadgeCheck className="h-3 w-3" />
+              本人確認済み
+            </span>
+          )}
+          {avgRating != null && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              {avgRating.toFixed(1)}
+            </span>
+          )}
         </div>
         <h3 className="text-lg font-extrabold leading-snug text-stone-800 group-hover:text-amber-600">
           {circle.name}

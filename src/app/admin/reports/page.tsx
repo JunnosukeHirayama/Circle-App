@@ -44,6 +44,13 @@ export default async function AdminReportsPage() {
         </div>
       </div>
 
+      <nav className="mt-4 flex gap-2 text-sm font-semibold">
+        <span className="rounded-full bg-amber-100 px-4 py-1.5 text-amber-700">通報</span>
+        <Link href="/admin/verifications" className="rounded-full bg-stone-100 px-4 py-1.5 text-stone-600 hover:bg-stone-200">
+          本人確認
+        </Link>
+      </nav>
+
       <p className="mt-6 text-sm text-stone-400">{reports.length}件の通報</p>
 
       {reports.length === 0 ? (

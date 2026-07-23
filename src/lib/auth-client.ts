@@ -12,6 +12,7 @@ export const authClient = createAuthClient({
     inferAdditionalFields({
       user: {
         role: { type: "string" },
+        verificationStatus: { type: "string", required: false },
         emailNotifications: { type: "boolean", required: false },
         bio: { type: "string", required: false },
         affiliation: { type: "string", required: false },

@@ -9,6 +9,8 @@ import { ProfileForm } from "@/components/ProfileForm";
 import { CircleForm } from "@/components/CircleForm";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { DeleteAccount } from "@/components/DeleteAccount";
+import { VerificationForm } from "@/components/VerificationForm";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { cn, timeAgo } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +26,10 @@ export default async function MePage() {
   const circle = organizer
     ? await prisma.circle.findFirst({ where: { ownerId: user.id } })
     : null;
+  const verification = await prisma.identityVerification.findUnique({
+    where: { userId: user.id },
+    select: { note: true },
+  });
 
   const applications = organizer
     ? []
@@ -39,7 +45,10 @@ export default async function MePage() {
       <div className="flex items-center gap-4">
         <Avatar name={user.name} image={user.image} size={64} />
         <div>
-          <h1 className="text-2xl font-extrabold text-stone-800">{user.name}</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-extrabold text-stone-800">
+            {user.name}
+            <VerifiedBadge status={user.verificationStatus} withLabel={false} size="md" />
+          </h1>
           <p className="text-sm text-stone-500">{user.email}</p>
           <span
             className={cn(
@@ -80,6 +89,7 @@ export default async function MePage() {
                   images: circle.images,
                   hasFee: circle.hasFee,
                   feeText: circle.feeText,
+                  requireVerified: circle.requireVerified,
                 }}
               />
             </Card>
@@ -166,6 +176,17 @@ export default async function MePage() {
           </div>
         </section>
       )}
+
+      {/* 本人確認 */}
+      <section className="mt-10">
+        <h2 className="text-lg font-extrabold text-stone-800">本人確認</h2>
+        <p className="mt-1 text-sm text-stone-500">
+          本人確認をすると「本人確認済み」バッジが付き、信頼されやすくなります。
+        </p>
+        <Card className="mt-3">
+          <VerificationForm status={user.verificationStatus} note={verification?.note} />
+        </Card>
+      </section>
 
       {/* アカウント削除 */}
       <section className="mt-10">

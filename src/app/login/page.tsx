@@ -32,7 +32,13 @@ function LoginForm() {
     const { data, error } = await signIn.email({ email, password });
     setLoading(false);
     if (error) {
-      setError(error.message || "メールアドレスまたはパスワードが正しくありません");
+      if (error.status === 403) {
+        setError(
+          "メールアドレスが未確認です。登録時にお送りした確認メールのリンクから認証を完了してください（確認メールを再送しました）。",
+        );
+      } else {
+        setError(error.message || "メールアドレスまたはパスワードが正しくありません");
+      }
       return;
     }
     const role = (data?.user as { role?: string } | undefined)?.role;
