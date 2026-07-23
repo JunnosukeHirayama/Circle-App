@@ -9,6 +9,8 @@ const OUT = path.join(process.cwd(), "docs", "screenshots");
 
 async function shoot(page, url, file, { fullPage = true } = {}) {
   await page.goto(url, { waitUntil: "networkidle" });
+  // Next の開発インジケーター（左下のバッジ）は撮影対象外
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important }" });
   await page.waitForTimeout(600);
   await page.screenshot({ path: path.join(OUT, file), fullPage });
   console.log("✓", file);
